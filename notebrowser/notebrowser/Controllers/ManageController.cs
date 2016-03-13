@@ -2,11 +2,16 @@
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
+using System.Web.Security;
 using System.Web.Mvc;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
 using notebrowser.Models;
+using System.Collections.Generic;
+using System.Security.Claims;
+using Microsoft.AspNet.Identity.EntityFramework;
+using notebrowser.Helpers;
 
 namespace notebrowser.Controllers
 {
@@ -32,9 +37,9 @@ namespace notebrowser.Controllers
             {
                 return _signInManager ?? HttpContext.GetOwinContext().Get<ApplicationSignInManager>();
             }
-            private set 
-            { 
-                _signInManager = value; 
+            private set
+            {
+                _signInManager = value;
             }
         }
 
@@ -298,6 +303,101 @@ namespace notebrowser.Controllers
         }
 
         //
+        // GET: /Manage/ManageUsers
+        [ClaimsAuthorizationAttribute(ClaimTypes.Role, "Administrator")]
+        public async Task<ActionResult> ManageUsers(string message)
+        {
+            ViewBag.StatusMessage = string.IsNullOrEmpty(message) ? string.Empty : message;
+
+            var user = await UserManager.FindByIdAsync(User.Identity.GetUserId());
+            if (user == null)
+            {
+                return View("Error");
+            }
+
+            using (var context = HttpContext.GetOwinContext().Get<ApplicationDbContext>())
+            {
+                List<ApplicationUser> userList = context.Users.ToList();
+                List<string> roles = GetRolesTypes();
+                
+                IdentityUserClaim userRole = user.Claims.FirstOrDefault(a => a.ClaimType == ClaimTypes.Role);
+
+                ManageUsersViewModel model = new ManageUsersViewModel
+                {
+                    UserNames = new List<SelectListItem>(),
+                    AvailableRoles = new List<SelectListItem>(),
+                    CurrentRoleName = userRole != null ? userRole.ClaimValue : "-1"
+                };
+
+                model.AvailableRoles.Add(new SelectListItem { Value = "-1", Text = "Select" });
+                model.UserNames.Add(new SelectListItem { Value = "-1", Text = "Select" });
+
+                model.AvailableRoles.AddRange(roles.Select(a => new SelectListItem { Value = a, Text = a }).ToList());
+                model.UserNames.AddRange(userList.Select(a => new SelectListItem { Value = a.Id, Text = a.Email }).ToList());
+
+                return View(model);
+            }
+
+        }
+
+        //
+        // POST: /Manage/LinkLogin
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> ManageUsers(ManageUsersViewModel model)
+        {
+            string message = string.Empty;
+
+            if (model != null)
+            {
+                if (!string.IsNullOrEmpty(model.SelectedUserName) && model.SelectedUserName != "-1")
+                {
+                    var user = await UserManager.FindByIdAsync(model.SelectedUserName);
+
+                    if (user == null)
+                    {
+                        throw new NullReferenceException("User");
+                    }
+
+                    IdentityUserClaim userRole = user.Claims.FirstOrDefault(a => a.ClaimType == ClaimTypes.Role);
+
+                    Claim userRoleClaim = UserManager.GetClaims(user.Id).FirstOrDefault(a => a.Type == ClaimTypes.Role);
+                    
+                    if (userRole != null)
+                    {
+                        IdentityResult removeResult = await UserManager.RemoveClaimAsync(user.Id, userRoleClaim);
+
+                        if (removeResult.Succeeded)
+                        {
+                            IdentityResult claimResult = await UserManager.AddClaimAsync(user.Id, new Claim(ClaimTypes.Role, model.SelectedRoleName));
+                            message = claimResult.Succeeded ? "RoleUpdateSuccess" : string.Format("Error: {0}", string.Join(",", claimResult.Errors));
+                        }
+                        else
+                        {
+                            message = string.Format("Error: {0}", string.Join(",", removeResult.Errors));
+                        }
+                    }
+                    else if (!string.IsNullOrEmpty(model.SelectedRoleName) && model.SelectedRoleName != "-1")
+                    {
+                        IdentityResult claimResult = await UserManager.AddClaimAsync(user.Id, new Claim(ClaimTypes.Role, model.SelectedRoleName));
+                        message = claimResult.Succeeded ? "AddRoleSuccess" : string.Format("Error: {0}", string.Join(",", claimResult.Errors));
+                    }
+                    else
+                    {
+                        message = "UserNameOrRoleNotSelected";
+                    }
+                }
+            }
+            else
+            {
+                throw new ArgumentNullException("Model");
+            }
+
+            return RedirectToAction("ManageUsers", new { Message = message });
+        }
+
+
+        //
         // POST: /Manage/LinkLogin
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -331,7 +431,7 @@ namespace notebrowser.Controllers
             base.Dispose(disposing);
         }
 
-#region Helpers
+        #region Helpers
         // Used for XSRF protection when adding external logins
         private const string XsrfKey = "XsrfId";
 
@@ -382,6 +482,12 @@ namespace notebrowser.Controllers
             Error
         }
 
-#endregion
+        public List<string> GetRolesTypes()
+        {
+            var values = Enum.GetValues(typeof(AccessLevel)).Cast<AccessLevel>().Select(a => a.ToString()).ToList();
+            return values;
+        }
+
+        #endregion
     }
 }

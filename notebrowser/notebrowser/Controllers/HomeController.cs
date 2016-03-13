@@ -26,5 +26,10 @@ namespace notebrowser.Controllers
 
             return View();
         }
+
+        public ActionResult NotAuthorized()
+        {
+            return View();
+        }
     }
 }

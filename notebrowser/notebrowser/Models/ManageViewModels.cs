@@ -20,6 +20,21 @@ namespace notebrowser.Models
         public IList<AuthenticationDescription> OtherLogins { get; set; }
     }
 
+    public class ManageUsersViewModel
+    {
+        [Display(Name = "UserName")]
+        public string SelectedUserName { get; set; }
+
+        [Display(Name = "Role")]
+        public string SelectedRoleName { get; set; }
+
+        public string CurrentRoleName { get; set; }
+
+        public List<System.Web.Mvc.SelectListItem> UserNames { get; set; }
+
+        public List<System.Web.Mvc.SelectListItem> AvailableRoles { get; set; }
+    }
+
     public class FactorViewModel
     {
         public string Purpose { get; set; }
@@ -82,5 +97,15 @@ namespace notebrowser.Models
     {
         public string SelectedProvider { get; set; }
         public ICollection<System.Web.Mvc.SelectListItem> Providers { get; set; }
+    }
+
+    
+    public enum AccessLevel
+    {
+        Guest = 0,
+        Demo = 1,
+        Regular = 2,
+        Developer = 8,
+        Administrator = 16
     }
 }

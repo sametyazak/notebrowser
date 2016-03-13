@@ -1,22 +1,72 @@
 ﻿@using Microsoft.AspNet.Identity
+@using notebrowser.Models
+@model LoginViewModel
+
 @if (Request.IsAuthenticated)
 {
     using (Html.BeginForm("LogOff", "Account", FormMethod.Post, new { id = "logoutForm", @class = "navbar-right" }))
     {
-    @Html.AntiForgeryToken()
+        @Html.AntiForgeryToken()
+        
+        @Html.ActionLink("Hello " + User.Identity.GetUserName() + "!", "#")
+        
+        <ul class="owl-tt-submenu owl-tt-form">
+            <li class="owl-tt-show owl-tt-show-below">
+                <a href="javascript:document.getElementById('logoutForm').submit()">Log off</a>
+            </li>
+            <li>
+                @Html.ActionLink("Hesabım", "Index", "Manage", routeValues: null, htmlAttributes: new { title = "Manage" })
+            </li>
+        </ul>
 
-    <ul class="nav navbar-nav navbar-right">
-        <li>
-            @Html.ActionLink("Hello " + User.Identity.GetUserName() + "!", "Index", "Manage", routeValues: null, htmlAttributes: new { title = "Manage" })
-        </li>
-        <li><a href="javascript:document.getElementById('logoutForm').submit()">Log off</a></li>
-    </ul>
+        @*<ul class="nav navbar-nav navbar-right">
+                <li>
+                    @Html.ActionLink("Hello " + User.Identity.GetUserName() + "!", "Index", "Manage", routeValues: null, htmlAttributes: new { title = "Manage" })
+                </li>
+                <li><a href="javascript:document.getElementById('logoutForm').submit()">Log off</a></li>
+            </ul>*@
     }
 }
 else
 {
-    <ul class="nav navbar-nav navbar-right">
-        <li>@Html.ActionLink("Register", "Register", "Account", routeValues: null, htmlAttributes: new { id = "registerLink" })</li>
-        <li>@Html.ActionLink("Log in", "Login", "Account", routeValues: null, htmlAttributes: new { id = "loginLink" })</li>
+    <a href="#">Login</a>
+    <ul class="owl-tt-submenu owl-tt-form">
+        <li class="owl-tt-show owl-tt-show-below">
+            @using (Html.BeginForm("Login", "Account", new { ReturnUrl = "/" }, FormMethod.Post, new { id = "loginForm", @class = "row form1", role = "form" }))
+            {
+                @Html.AntiForgeryToken()
+                <fieldset>
+                    <label class="name col-md-12">
+                        @*<input type="text" value="Username:">*@
+                        @Html.TextBoxFor(m => m.Email, new { @class = "" })
+                    </label>
+                    <label class="password col-md-12">
+                        @*<input type="password" value="Password:">*@
+                        @Html.PasswordFor(m => m.Password, new { @class = "form-control" })
+                    </label>
+                    <div class="clear"></div>
+                    <div class="owl-tt-checkbox  col-md-12">
+                        <label style="color:black">
+                            @Html.CheckBoxFor(m => m.RememberMe, new { @class = "owl-tt-remember-checkbox" })
+                            Remember me?
+                        </label>
+                    </div>
+
+                    <div class="link-form col-md-12">
+                        <a class="flat fl-round sm green dis-block icon-animated" style="display: block;" href="javascript:document.getElementById('loginForm').submit();">Log in</a>
+                    </div>
+
+                    <div class="clear"></div>
+                    <div class="link-form col-md-12">
+                        @Html.ActionLink("Register", "Register", "Account", new { area = "" }, new { @class = "flat fl-round sm border-blue dis-block icon-animated" })
+                    </div>
+                </fieldset>
+            }
+        </li>
     </ul>
+
+    @*<ul class="nav navbar-nav navbar-right">
+            <li>@Html.ActionLink("Register", "Register", "Account", routeValues: null, htmlAttributes: new { id = "registerLink" })</li>
+            <li>@Html.ActionLink("Log in", "Login", "Account", routeValues: null, htmlAttributes: new { id = "loginLink" })</li>
+        </ul>*@
 }

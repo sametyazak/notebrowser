@@ -1,0 +1,38 @@
+﻿@using Microsoft.AspNet.Identity
+<ul class="owl-menu menu-content">
+    <!--=========== Single Menu ===============-->
+    <li class="single-dropdown">
+        @Html.ActionLink("Home", "Index", "Home", new { area = "" }, new { @class = "active" })
+    </li>
+    <!--=========== Single Menu ===============-->
+    <li class="single-dropdown">
+        @Html.ActionLink("About", "About", "Home", new { area = "" }, new { @class = "" })
+    </li>
+    <!--=========== Single Menu ===============-->
+    <li class="single-dropdown">
+        @Html.ActionLink("Browse", "Browse", "Home", new { area = "" }, new { @class = "" })
+    </li>
+    <!--=========== Mega Menu ===============-->
+    <li class="mega-dropdown">
+        @Html.ActionLink("Demand", "Demand", "Home", new { area = "" }, new { @class = "" })
+    </li>
+    <!--=========== Single Menu ===============-->
+    <li class="single-dropdown">
+        @Html.ActionLink("Contact Us", "Contact", "Home", new { area = "" }, new { @class = "" })
+    </li>
+
+    @if (Request.IsAuthenticated)
+    {
+        var claimsIdentity = User.Identity as System.Security.Claims.ClaimsIdentity;
+
+        if (claimsIdentity != null)
+        {
+            var userClaim = claimsIdentity.FindFirst(System.Security.Claims.ClaimTypes.Role);
+
+            if (userClaim != null && userClaim.Value == "Administrator")
+            {
+                <li>@Html.ActionLink("Admin", "Admin", "Manage")</li>
+            }
+        }
+    }
+</ul>

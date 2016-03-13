@@ -1,0 +1,42 @@
+﻿
+@model notebrowser.Models.ManageUsersViewModel
+@using Microsoft.Owin.Security
+@{
+    ViewBag.Title = "Manage Users";
+}
+
+<h2>@ViewBag.Title.</h2>
+
+<p class="text-success">@ViewBag.StatusMessage</p>
+@using (Html.BeginForm("ManageUsers", "Manage", FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
+{
+    @Html.AntiForgeryToken()
+
+    <h4>Manage users properties and roles</h4>
+        <hr />
+
+        @Html.ValidationSummary("", new { @class = "text-danger" })
+
+        <div class="form-group">
+            @Html.LabelFor(m => m.SelectedUserName, new { @class = "col-md-2 control-label" })
+
+            <div class="col-md-10">
+                @Html.DropDownListFor(m => m.SelectedUserName, Model.UserNames, new { @class = "form-control" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(m => m.SelectedRoleName, new { @class = "col-md-2 control-label" })
+
+            <div class="col-md-10">
+                @Html.DropDownListFor(m => m.SelectedRoleName, Model.AvailableRoles, new { @class = "form-control" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <input type="submit" class="btn btn-default" value="Save" />
+            </div>
+        </div>
+}
+
